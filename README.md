@@ -12,6 +12,15 @@ It's bad practice to use cloud sync solutions to sync working copies (https://gi
 
 Repoman helps you work on the same projects on multiple devices, by syncing `repoman.lst` instead.
 
+# Installation
+
+There are two ways:
+
+1. Only `repoman.sh` is needed. Save it into your path, so you can run it from any location. 
+2. If you want to benefit from updates, clone this repository, and [create a symbolic link](https://duckduckgo.com/?t=ffab&q=create+symbolic+link&ia=web).
+
+In either case, make the script executable via `chmod +x repoman.sh`.
+
 # Examples
 
 Export:
