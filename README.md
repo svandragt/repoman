@@ -34,6 +34,9 @@ vagrant.local/content/plugins/404-fallback=https://github.com/svandragt/404-fall
 Taskfile=git@github.com:svandragt/Taskfile.git
 freshcookies=git@github.com:svandragt/freshcookies.git
 repoman=https://github.com/svandragt/repoman.git
+
+$ ls *.lst
+repoman.lst
 ```
 
 Import:
