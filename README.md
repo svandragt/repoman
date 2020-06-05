@@ -87,6 +87,6 @@ remote: Compressing objects: 100% (6/6), done.
 remote: Total 7 (delta 0), reused 4 (delta 0), pack-reused 0
 Receiving objects: 100% (7/7), done.
 
-$ ls
-Taskfile      freshcookies  repoman       repoman.lst   vagrant.local
+$ ls -d */
+Taskfile      freshcookies  repoman       vagrant.local
 ```
