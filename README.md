@@ -6,13 +6,15 @@ When exporting, Repoman scans the working directory for .git folders and save it
 
 When importing, repoman will restore this directory structure and clone each repository.
 
-# Why use this
+
+## Why use this
 
 It's bad practice to use cloud sync solutions to sync working copies (https://git.seveas.net/how-to-back-up-a-git-repository.html).
 
 Repoman helps you work on the same projects on multiple devices, by syncing `repoman.lst` instead.
 
-# Installation
+
+## Installation
 
 There are two ways:
 
@@ -21,7 +23,8 @@ There are two ways:
 
 In either case, make the script executable via `chmod +x repoman.sh`.
 
-# Examples
+
+## Examples
 
 Export:
 ```bash
