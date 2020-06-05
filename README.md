@@ -14,7 +14,7 @@ Repoman helps you work on the same projects on multiple devices, by syncing `rep
 
 # Examples
 
-Export
+Export:
 ```bash
 $ repoman.sh export
 vagrant.local=https://github.com/Chassis/Chassis.git
@@ -23,6 +23,8 @@ Taskfile=git@github.com:svandragt/Taskfile.git
 freshcookies=git@github.com:svandragt/freshcookies.git
 repoman=https://github.com/svandragt/repoman.git
 ```
+
+Import:
 
 ```bash
 $ repoman.sh import
