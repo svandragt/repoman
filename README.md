@@ -1,22 +1,22 @@
 # Repoman
 
-Repoman is a script to export and import a list of git repositories using an intermediate `repoman.lst` file.
+Repoman is a script to export and import a list of git repositories.
 
-When exporting, Repoman scans the working directory for .git folders and save its relative path with the git remote.
+When run, repoman scans the working directory for .git folders and echoes its relative path with the git remote. You can save this into a file.
 
-When importing, repoman will restore this directory structure and clone each repository.
+When these contents are piped into Repoman, repositories will be cloned into this directory structure.
 
 # Why use this
 
 It's bad practice to use cloud sync solutions to sync working copies (https://git.seveas.net/how-to-back-up-a-git-repository.html).
 
-Repoman helps you work on the same projects on multiple devices, by syncing `repoman.lst` instead.
+Repoman helps you work on the same projects on multiple devices, by syncing an intermediate file.
 
 # Examples
 
 Export:
 ```bash
-$ repoman.sh export
+$ repoman.sh | tee repoman.lst
 vagrant.local=https://github.com/Chassis/Chassis.git
 vagrant.local/content/plugins/404-fallback=https://github.com/svandragt/404-fallback.git
 Taskfile=git@github.com:svandragt/Taskfile.git
@@ -27,7 +27,7 @@ repoman=https://github.com/svandragt/repoman.git
 Import:
 
 ```bash
-$ repoman.sh import
+$ cat repoman.lst | repoman.sh
 
 ⏳ Cloning vagrant.local
 Cloning into 'vagrant.local'...
