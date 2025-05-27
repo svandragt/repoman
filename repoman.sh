@@ -1,8 +1,56 @@
 #!/usr/bin/env bash
 INVOKE_DIR=${PWD}/
 
+_show_help() {
+		cat << EOF
+Repoman - A tool to export and import git repositories
+
+USAGE:
+  Export mode (when run from terminal):
+    $(basename "$0") [OPTIONS]
+
+  Import mode (when piped input):
+    cat repos.txt | $(basename "$0") [FILE]
+
+OPTIONS:
+  -n, --no-remote    Only list repositories without a remote
+  -a, --all          List all repositories (with and without remotes)
+  -h, --help         Show this help message
+
+EXAMPLES:
+  $(basename "$0") > repos.txt             # Export repos with remotes to a file
+  $(basename "$0") -n > local-repos.txt    # Export repos without remotes to a file
+  cat repos.txt | $(basename "$0")         # Import/clone repositories from a file
+EOF
+}
+
 _export() {
-		local no_remote=$1
+		local show_no_remote=false
+		local show_all=false
+
+		# Parse command line arguments
+		while [[ $# -gt 0 ]]; do
+				case "$1" in
+						-n|--no-remote)
+								show_no_remote=true
+								shift
+								;;
+						-a|--all)
+								show_all=true
+								shift
+								;;
+						-h|--help)
+								_show_help
+								exit 0
+								;;
+						*)
+								echo "Error: Unknown option: $1" >&2
+								_show_help
+								exit 1
+								;;
+				esac
+		done
+
 		# Check if INVOKE_DIR is defined
 		if [ -z "$INVOKE_DIR" ]; then
 				echo "Error: INVOKE_DIR is not defined." >&2
@@ -19,23 +67,28 @@ _export() {
 
 				PRJ_DIR=${PWD#"$INVOKE_DIR"}
 				REMOTE=$(git remote get-url origin 2>/dev/null)
+				has_remote=$([[ -n "$REMOTE" ]] && echo true || echo false)
 
 				popd >/dev/null || continue
 
-				# If -n or --no-remote is set, only show repos without a remote
-				# Otherwise show only repos with a remote (default behavior)
-				if [ "$no_remote" = "--no-remote" ] || [ "$no_remote" = "-n" ]; then
-						if [ -n "$REMOTE" ]; then
-								continue
+				# Determine whether to show this repository based on filters
+				if $show_all; then
+						# Show all repositories
+						if $has_remote; then
+								echo "$PRJ_DIR=$REMOTE"
+						else
+								echo "$PRJ_DIR"
 						fi
-						# Print the result without remote (since there is none)
-						echo "$PRJ_DIR"
+				elif $show_no_remote; then
+						# Only show repos without remotes
+						if ! $has_remote; then
+								echo "$PRJ_DIR"
+						fi
 				else
-						if [ -z "$REMOTE" ]; then
-								continue
+						# Default: only show repos with remotes
+						if $has_remote; then
+								echo "$PRJ_DIR=$REMOTE"
 						fi
-						# Print the result with remote
-						echo "$PRJ_DIR=$REMOTE"
 				fi
 		done
 }
@@ -75,8 +128,8 @@ _import() {
 }
 
 if [ -t 0 ]; then
-		# tty: Call _export with any parameters provided
-		_export "$1"
+		# tty: Call _export with all parameters provided
+		_export "$@"
 else
 		# no tty: Explicitly call _import with arguments
 		_import "$@"

@@ -4,9 +4,26 @@ Repoman is a script to export and import a list of git repositories.
 
 > Use repoman to generate a list of - and clone - multiple repositories with one command.
 
-When run, repoman scans the working directory for .git folders and echoes its relative path with the git remote. You can save this into a file.
+## Usage
 
-When these contents are piped into Repoman, repositories will be cloned into this directory structure.
+### Export Mode
+When run without input, repoman scans the working directory for .git folders and echoes its relative path with the git remote. You can save this into a file.
+
+Parameters:
+- `-n`, `--no-remote`: Only list repositories that don't have a remote configured
+- `-a`, `--all`: List all repositories (both with and without remotes)
+- `-h`, `--help`: Show help information
+
+### Import Mode
+When contents are piped into Repoman, repositories will be cloned into this directory structure.
+
+## Examples
+
+Parameters:
+- `-n` or `--no-remote`: Only list repositories that don't have a remote configured
+
+### Import Mode
+When contents are piped into Repoman, repositories will be cloned into this directory structure.
 
 
 ## Why use this
