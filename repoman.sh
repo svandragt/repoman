@@ -5,7 +5,7 @@ _export() {
 		# Check if INVOKE_DIR is defined
 		if [ -z "$INVOKE_DIR" ]; then
 				echo "Error: INVOKE_DIR is not defined." >&2
-				return 1
+				exit 1
 		fi
 
 		# Use `find` command in a more portable way
@@ -36,7 +36,7 @@ _import() {
 		# Check if the input file exists and is readable
 		if [[ ! -r "$input_file" ]]; then
 				echo "❌ Input file not found or unreadable: $input_file" >&2
-				return 1
+				exit 1
 		fi
 
 		# Read the file line by line
@@ -71,3 +71,4 @@ else
 		# no tty: Explicitly call _import with arguments
 		_import "$@"
 fi
+exit 0
