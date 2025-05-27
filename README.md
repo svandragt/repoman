@@ -4,6 +4,8 @@ Repoman is a script to export and import a list of git repositories.
 
 > Use repoman to generate a list of - and clone - multiple repositories with one command.
 
+It's very useful if you work with the same projects from multiple pcs (laptop/desktop for example). Syncing git projects via dropbox etc is fragile, instead sync the output of `repoman`.
+
 ## Usage
 
 ### Export Mode
