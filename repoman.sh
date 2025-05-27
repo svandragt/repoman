@@ -2,6 +2,7 @@
 INVOKE_DIR=${PWD}/
 
 _export() {
+		local no_remote=$1
 		# Check if INVOKE_DIR is defined
 		if [ -z "$INVOKE_DIR" ]; then
 				echo "Error: INVOKE_DIR is not defined." >&2
@@ -21,12 +22,21 @@ _export() {
 
 				popd >/dev/null || continue
 
-				if [ -z "$REMOTE" ]; then
-						continue
+				# If -n or --no-remote is set, only show repos without a remote
+				# Otherwise show only repos with a remote (default behavior)
+				if [ "$no_remote" = "--no-remote" ] || [ "$no_remote" = "-n" ]; then
+						if [ -n "$REMOTE" ]; then
+								continue
+						fi
+						# Print the result without remote (since there is none)
+						echo "$PRJ_DIR"
+				else
+						if [ -z "$REMOTE" ]; then
+								continue
+						fi
+						# Print the result with remote
+						echo "$PRJ_DIR=$REMOTE"
 				fi
-
-				# Print the result
-				echo "$PRJ_DIR=$REMOTE"
 		done
 }
 
@@ -65,8 +75,8 @@ _import() {
 }
 
 if [ -t 0 ]; then
-		# tty: Call _export with no parameters
-		_export
+		# tty: Call _export with any parameters provided
+		_export "$1"
 else
 		# no tty: Explicitly call _import with arguments
 		_import "$@"
