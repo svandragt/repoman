@@ -18,6 +18,8 @@ Two modes, `_export` and `_import`, dispatched by the block at the bottom of the
 
 Export walks `find . -type d -name '.git' -prune`, and prints one line per repo as `relative/path=remote-url`, where the path is relative to `INVOKE_DIR` (the working directory captured at line 2). Import parses each line on the first `=` and runs `git clone REMOTE PRJ_DIR`, so the export format is also the import format — changing one side means changing both.
 
+`_is_excluded` matches a repo's relative path against each `-x` pattern both exactly and as a `pattern/*` prefix, so excluding `work` also drops `work/deep` while leaving `notwork` alone. The pattern is deliberately unquoted in the comparison so globs work.
+
 Repos with no remote print as a bare path with no `=`. Those lines are informational only; import rejects them as invalid entries. `-n` produces nothing but such lines, and `-a` mixes them with cloneable ones.
 
 Option parsing lives inside `_export`, so the dispatch has to route any argument starting with `-` to export before it consults the tty. Without that branch, `repoman.sh -n | grep x` treats `-n` as an input filename.

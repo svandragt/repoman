@@ -17,19 +17,37 @@ OPTIONS:
   (default)          Only list repositories with a remote
   -n, --no-remote    Only list repositories without a remote
   -a, --all          List all repositories (with and without remotes)
+  -x, --exclude PAT  Skip repositories at PAT or below it. PAT is a path
+                     relative to the working directory and may be a glob.
+                     Repeat the option to exclude more than one.
   -h, --help         Show this help message
 
 EXAMPLES:
   $(basename "$0") > repos.txt             # Export repos with remotes to a file
   $(basename "$0") -n > local-repos.txt    # Export repos without remotes to a file
+  $(basename "$0") -x work -x 'tmp*'       # Export, skipping work/ and tmp*/
   cat repos.txt | $(basename "$0")         # Import/clone repositories from a file
   $(basename "$0") repos.txt               # The same, without the pipe
 EOF
 }
 
+_is_excluded() {
+		local dir=$1 pat
+		shift
+		for pat in "$@"; do
+				# Unquoted $pat so a pattern can be a glob as well as a plain name
+				# shellcheck disable=SC2053
+				if [[ "$dir" == $pat || "$dir" == $pat/* ]]; then
+						return 0
+				fi
+		done
+		return 1
+}
+
 _export() {
 		local show_no_remote=false
 		local show_all=false
+		local excludes=()
 
 		# Parse command line arguments
 		while [[ $# -gt 0 ]]; do
@@ -41,6 +59,14 @@ _export() {
 						-a|--all)
 								show_all=true
 								shift
+								;;
+						-x|--exclude)
+								if [[ -z "$2" ]]; then
+										echo "Error: $1 requires a pattern" >&2
+										exit 1
+								fi
+								excludes+=("$2")
+								shift 2
 								;;
 						-h|--help)
 								_show_help
@@ -67,6 +93,10 @@ _export() {
 				has_remote=$([[ -n "$REMOTE" ]] && echo true || echo false)
 
 				popd >/dev/null || continue
+
+				if _is_excluded "$PRJ_DIR" "${excludes[@]}"; then
+						continue
+				fi
 
 				# Determine whether to show this repository based on filters
 				if $show_all; then

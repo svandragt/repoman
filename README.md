@@ -15,7 +15,14 @@ Parameters:
 - No parameter (default): Only list repositories that have a remote configured
 - `-n`, `--no-remote`: Only list repositories that don't have a remote configured
 - `-a`, `--all`: List all repositories (both with and without remotes)
+- `-x`, `--exclude`: Skip repositories at the given path or below it. Repeat the option to exclude more than one.
 - `-h`, `--help`: Show help information
+
+The exclude pattern is a path relative to the working directory, and it can be a glob. Quote globs so the shell passes them through:
+
+```bash
+repoman.sh -x work -x 'tmp*' > repos.txt
+```
 
 ### Import Mode
 Pass a list as a file argument, or pipe it in, and Repoman clones the repositories into this directory structure:
