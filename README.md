@@ -12,21 +12,20 @@ It's very useful if you work with the same projects from multiple pcs (laptop/de
 When run without input, repoman scans the working directory for .git folders and echoes its relative path with the git remote. You can save this into a file.
 
 Parameters:
+- No parameter (default): Only list repositories that have a remote configured
 - `-n`, `--no-remote`: Only list repositories that don't have a remote configured
 - `-a`, `--all`: List all repositories (both with and without remotes)
 - `-h`, `--help`: Show help information
 
 ### Import Mode
-When contents are piped into Repoman, repositories will be cloned into this directory structure.
+Pass a list as a file argument, or pipe it in, and Repoman clones the repositories into this directory structure:
 
-## Examples
+```bash
+repoman.sh repoman.lst
+cat repoman.lst | repoman.sh
+```
 
-Parameters:
-- `-n` or `--no-remote`: Only list repositories that don't have a remote configured
-
-### Import Mode
-When contents are piped into Repoman, repositories will be cloned into this directory structure.
-
+Lines without a remote (the output of `-n`, and part of the output of `-a`) can't be cloned. Repoman reports them as invalid entries and carries on.
 
 ## Why use this
 

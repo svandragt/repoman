@@ -9,10 +9,12 @@ USAGE:
   Export mode (when run from terminal):
     $(basename "$0") [OPTIONS]
 
-  Import mode (when piped input):
-    cat repos.txt | $(basename "$0") [FILE]
+  Import mode (when given a file or piped input):
+    $(basename "$0") repos.txt
+    cat repos.txt | $(basename "$0")
 
 OPTIONS:
+  (default)          Only list repositories with a remote
   -n, --no-remote    Only list repositories without a remote
   -a, --all          List all repositories (with and without remotes)
   -h, --help         Show this help message
@@ -21,6 +23,7 @@ EXAMPLES:
   $(basename "$0") > repos.txt             # Export repos with remotes to a file
   $(basename "$0") -n > local-repos.txt    # Export repos without remotes to a file
   cat repos.txt | $(basename "$0")         # Import/clone repositories from a file
+  $(basename "$0") repos.txt               # The same, without the pipe
 EOF
 }
 
@@ -51,14 +54,8 @@ _export() {
 				esac
 		done
 
-		# Check if INVOKE_DIR is defined
-		if [ -z "$INVOKE_DIR" ]; then
-				echo "Error: INVOKE_DIR is not defined." >&2
-				exit 1
-		fi
-
-		# Use `find` command in a more portable way
-		find . -type d -name '.git' | while read -r d; do
+		# -prune: a repo's own object store never contains another repo
+		find . -type d -name '.git' -prune | while read -r d; do
 				# Ensure navigation to the directory works
 				if ! pushd "$d/.." >/dev/null; then
 						echo "Error: Could not navigate to $d/.." >&2
@@ -127,11 +124,13 @@ _import() {
 		done < "$input_file"
 }
 
-if [ -t 0 ]; then
-		# tty: Call _export with all parameters provided
+if [[ -f "$1" ]]; then
+		# A readable file argument always means import, tty or not
+		_import "$1"
+elif [[ "$1" == -* || -t 0 ]]; then
+		# An option always means export, even when the output is piped
 		_export "$@"
 else
-		# no tty: Explicitly call _import with arguments
 		_import "$@"
 fi
 exit 0
