@@ -16,6 +16,7 @@ Parameters:
 - `-n`, `--no-remote`: Only list repositories that don't have a remote configured
 - `-a`, `--all`: List all repositories (both with and without remotes)
 - `-x`, `--exclude`: Skip repositories at the given path or below it. Repeat the option to exclude more than one.
+- `-d`, `--dirty`: Only list repositories with uncommitted changes. Combine it with `-a` to find every repository that needs a commit.
 - `-h`, `--help`: Show help information
 
 The exclude pattern is a path relative to the working directory, and it can be a glob. Quote globs so the shell passes them through:

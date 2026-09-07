@@ -20,12 +20,15 @@ OPTIONS:
   -x, --exclude PAT  Skip repositories at PAT or below it. PAT is a path
                      relative to the working directory and may be a glob.
                      Repeat the option to exclude more than one.
+  -d, --dirty        Only list repositories with uncommitted changes.
+                     Combines with the other filters.
   -h, --help         Show this help message
 
 EXAMPLES:
   $(basename "$0") > repos.txt             # Export repos with remotes to a file
   $(basename "$0") -n > local-repos.txt    # Export repos without remotes to a file
   $(basename "$0") -x work -x 'tmp*'       # Export, skipping work/ and tmp*/
+  $(basename "$0") -a -d                   # List every repo that needs a commit
   cat repos.txt | $(basename "$0")         # Import/clone repositories from a file
   $(basename "$0") repos.txt               # The same, without the pipe
 EOF
@@ -48,6 +51,7 @@ _export() {
 		local show_no_remote=false
 		local show_all=false
 		local excludes=()
+		local only_dirty=false
 
 		# Parse command line arguments
 		while [[ $# -gt 0 ]]; do
@@ -58,6 +62,10 @@ _export() {
 								;;
 						-a|--all)
 								show_all=true
+								shift
+								;;
+						-d|--dirty)
+								only_dirty=true
 								shift
 								;;
 						-x|--exclude)
@@ -91,10 +99,14 @@ _export() {
 				PRJ_DIR=${PWD#"$INVOKE_DIR"}
 				REMOTE=$(git remote get-url origin 2>/dev/null)
 				has_remote=$([[ -n "$REMOTE" ]] && echo true || echo false)
+				is_dirty=$([[ -n "$(git status --porcelain 2>/dev/null)" ]] && echo true || echo false)
 
 				popd >/dev/null || continue
 
 				if _is_excluded "$PRJ_DIR" "${excludes[@]}"; then
+						continue
+				fi
+				if $only_dirty && ! $is_dirty; then
 						continue
 				fi
 
