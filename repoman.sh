@@ -97,6 +97,8 @@ _export() {
 				fi
 
 				PRJ_DIR=${PWD#"$INVOKE_DIR"}
+				# The working directory itself is a repo: PWD has no trailing slash to strip
+				[[ "$PWD/" == "$INVOKE_DIR" ]] && PRJ_DIR=.
 				REMOTE=$(git remote get-url origin 2>/dev/null)
 				has_remote=$([[ -n "$REMOTE" ]] && echo true || echo false)
 				is_dirty=$([[ -n "$(git status --porcelain 2>/dev/null)" ]] && echo true || echo false)
@@ -159,7 +161,8 @@ _import() {
 				fi
 
 				echo; echo "⏳ Cloning $PRJ_DIR"
-				if ! git clone "$REMOTE" "$PRJ_DIR"; then
+				# Keep git away from stdin, or an ssh prompt eats the rest of the list
+				if ! git clone "$REMOTE" "$PRJ_DIR" </dev/null; then
 						echo "❌ Failed to clone $REMOTE into $PRJ_DIR" >&2
 						continue
 				fi
