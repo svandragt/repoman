@@ -16,7 +16,7 @@ Two modes, `_export` and `_import`, dispatched by the block at the bottom of the
 2. Otherwise stdin attached to a tty means export.
 3. Otherwise import from stdin.
 
-Export walks `find . -type d -name '.git' -prune`, and prints one line per repo as `relative/path=remote-url`, where the path is relative to `INVOKE_DIR` (the working directory captured at line 2). Import parses each line on the first `=` and runs `git clone REMOTE PRJ_DIR` (or `gh repo clone` for a github.com remote when `gh` is logged in, so private repos clone before `gh auth setup-git`), so the export format is also the import format — changing one side means changing both.
+Export walks `find . -type d -name '.git' -prune`, and prints one line per repo as `relative/path=remote-url`, where the path is relative to `INVOKE_DIR` (the working directory captured at line 2). Import parses each line on the first `=` and runs `git clone REMOTE PRJ_DIR` (or `gh repo clone` for a github.com remote when `gh` is logged in, so private repos clone before `gh auth setup-git`), so the export format is also the import format — changing one side means changing both. Import sorts the list on the path field first: `find` visits directories in readdir order, so an export can list `x/.wiki` before `x`, and cloning the child first leaves `x` non-empty, so the parent clone fails.
 
 `_is_excluded` matches a repo's relative path against each `-x` pattern both exactly and as a `pattern/*` prefix, so excluding `work` also drops `work/deep` while leaving `notwork` alone. The pattern is deliberately unquoted in the comparison so globs work.
 

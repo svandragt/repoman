@@ -208,7 +208,8 @@ _import() {
 						_clone_hint "$REMOTE" "$PRJ_DIR"
 						continue
 				fi
-		done < "$input_file"
+		# Sorted on the path alone, so a parent clones before the repos nested in it; a whole-line sort puts "a/b=" before "a="
+		done < <(LC_ALL=C sort -t= -k1,1 "$input_file")
 }
 
 if [[ -f "$1" ]]; then
