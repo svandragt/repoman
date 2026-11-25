@@ -44,6 +44,25 @@ _is_excluded() {
 		return 1
 }
 
+# git has already printed its own error, so this adds only the likely fix
+_clone_hint() {
+		local remote=$1 dir=$2 err
+		# A failed clone removes the directory it created, so a non-empty one was there before
+		if [[ -n "$(ls -A "$dir" 2>/dev/null)" ]]; then
+				echo "   $dir already exists. Move it away or remove its line from the list." >&2
+				return
+		fi
+		err=$(GIT_TERMINAL_PROMPT=0 git ls-remote "$remote" HEAD 2>&1 >/dev/null)
+		case "$err" in
+				*"could not read Username"*|*"Authentication failed"*|*"Repository not found"*)
+						echo "   The repository is private or does not exist. Log in with 'gh auth login', or run 'gh auth setup-git' if gh is already logged in." >&2 ;;
+				*"Permission denied (publickey)"*|*"Host key verification failed"*)
+						echo "   The host refused your SSH key. Add the key to your account, or change the remote to an https:// URL." >&2 ;;
+				*"Could not resolve host"*)
+						echo "   The host name does not resolve. Check the network connection and the URL." >&2 ;;
+		esac
+}
+
 _export() {
 		local show_no_remote=false
 		local show_all=false
@@ -159,6 +178,7 @@ _import() {
 				fi
 				if ! "${clone[@]}" "$REMOTE" "$PRJ_DIR"; then
 						echo "❌ Failed to clone $REMOTE into $PRJ_DIR" >&2
+						_clone_hint "$REMOTE" "$PRJ_DIR"
 						continue
 				fi
 		done < "$input_file"
