@@ -53,18 +53,22 @@ _is_github() {
 _clone_hint() {
 		local remote=$1 dir=$2 err
 		# A failed clone removes the directory it created, so a non-empty one was there before
-		if [[ -n "$(ls -A "$dir" 2>/dev/null)" ]]; then
+		if [[ -n "$(ls -A -- "$dir" 2>/dev/null)" ]]; then
 				echo "   $dir already exists. Move it away or remove its line from the list." >&2
 				return
 		fi
-		err=$(GIT_TERMINAL_PROMPT=0 git ls-remote "$remote" HEAD 2>&1 >/dev/null)
+		# English messages and no second ssh prompt, so the patterns below match and the probe stays quiet
+		err=$(LC_ALL=C GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh} -o BatchMode=yes" \
+				git ls-remote "$remote" HEAD 2>&1 >/dev/null </dev/null)
 		case "$err" in
 				*"could not read Username"*|*"Authentication failed"*|*"Repository not found"*)
 						echo "   The repository is private or does not exist, or your login to its host failed." >&2
 						if [[ "$remote" == https://* ]] && _is_github "$remote"; then
 								echo "   For a private GitHub repository, log in with 'gh auth login'." >&2
 						fi ;;
-				*"Permission denied (publickey)"*|*"Host key verification failed"*)
+				*"Host key verification failed"*)
+						echo "   ssh does not know this host's key. Run 'ssh -T' against the host once to check and accept it." >&2 ;;
+				*"Permission denied (publickey)"*)
 						echo "   The host refused your SSH key. Add the key to your account, or change the remote to an https:// URL." >&2 ;;
 				*"Could not resolve host"*)
 						echo "   The host name does not resolve. Check the network connection and the URL." >&2 ;;
@@ -184,7 +188,8 @@ _import() {
 				if $use_gh && _is_github "$REMOTE"; then
 						clone=(gh repo clone)
 				fi
-				if ! "${clone[@]}" "$REMOTE" "$PRJ_DIR"; then
+				# </dev/null: the loop's stdin is the list, and a child that reads it would skip repos
+				if ! "${clone[@]}" "$REMOTE" "$PRJ_DIR" </dev/null; then
 						echo "❌ Failed to clone $REMOTE into $PRJ_DIR" >&2
 						_clone_hint "$REMOTE" "$PRJ_DIR"
 						continue
