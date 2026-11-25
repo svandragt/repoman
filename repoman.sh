@@ -58,7 +58,7 @@ _clone_hint() {
 				return
 		fi
 		# English messages and no second ssh prompt, so the patterns below match and the probe stays quiet
-		err=$(LC_ALL=C GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh} -o BatchMode=yes" \
+		err=$(LC_ALL=C GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-$(git config core.sshCommand || echo ssh)} -o BatchMode=yes" \
 				git ls-remote "$remote" HEAD 2>&1 >/dev/null </dev/null)
 		case "$err" in
 				*"could not read Username"*|*"Authentication failed"*|*"Repository not found"*)
