@@ -33,6 +33,8 @@ repoman.sh repoman.lst
 cat repoman.lst | repoman.sh
 ```
 
+Repoman clones in path order, so a repository clones before any repository nested inside it, such as its `.wiki`.
+
 If the [GitHub CLI](https://cli.github.com/) is installed and logged in, Repoman clones GitHub repositories with `gh repo clone`, so private repositories clone on a new machine without extra git setup. Other remotes use `git clone`. To pull or push in those clones later without a password prompt, run `gh auth setup-git` once.
 
 When a clone fails, Repoman shows the error from git or gh followed by the likely fix, for example logging in with `gh auth login` for a private repository.
