@@ -47,6 +47,37 @@ _is_excluded() {
 		return 1
 }
 
+# Matches the host only, so a github.com inside another host's path does not count
+_is_github() {
+		[[ "$1" =~ ^(https://([^/@]+@)?github\.com/|git@github\.com:|ssh://git@github\.com/) ]]
+}
+
+# git has already printed its own error, so this adds only the likely fix
+_clone_hint() {
+		local remote=$1 dir=$2 err
+		# A failed clone removes the directory it created, so a non-empty one was there before
+		if [[ -n "$(ls -A -- "$dir" 2>/dev/null)" ]]; then
+				echo "   $dir already exists. Move it away or remove its line from the list." >&2
+				return
+		fi
+		# English messages and no second ssh prompt, so the patterns below match and the probe stays quiet
+		err=$(LC_ALL=C GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-$(git config core.sshCommand || echo ssh)} -o BatchMode=yes" \
+				git ls-remote "$remote" HEAD 2>&1 >/dev/null </dev/null)
+		case "$err" in
+				*"could not read Username"*|*"Authentication failed"*|*"Repository not found"*)
+						echo "   The repository is private or does not exist, or your login to its host failed." >&2
+						if [[ "$remote" == https://* ]] && _is_github "$remote"; then
+								echo "   For a private GitHub repository, log in with 'gh auth login'." >&2
+						fi ;;
+				*"Host key verification failed"*)
+						echo "   ssh does not know this host's key. Run 'ssh -T' against the host once to check and accept it." >&2 ;;
+				*"Permission denied (publickey)"*)
+						echo "   The host refused your SSH key. Add the key to your account, or change the remote to an https:// URL." >&2 ;;
+				*"Could not resolve host"*)
+						echo "   The host name does not resolve. Check the network connection and the URL." >&2 ;;
+		esac
+}
+
 _export() {
 		local show_no_remote=false
 		local show_all=false
@@ -135,12 +166,17 @@ _export() {
 }
 
 _import() {
-		local input_file="${1:-/dev/stdin}" PRJ_DIR REMOTE line
+		local input_file="${1:-/dev/stdin}" PRJ_DIR REMOTE line clone
 
 		# Check if the input file exists and is readable
 		if [[ ! -r "$input_file" ]]; then
 				echo "❌ Input file not found or unreadable: $input_file" >&2
 				exit 1
+		fi
+
+		local use_gh=false
+		if command -v gh >/dev/null && gh auth status --hostname github.com >/dev/null 2>&1; then
+				use_gh=true
 		fi
 
 		# Read the file line by line
@@ -161,9 +197,15 @@ _import() {
 				fi
 
 				echo; echo "⏳ Cloning $PRJ_DIR"
-				# Keep git away from stdin, or an ssh prompt eats the rest of the list
-				if ! git clone "$REMOTE" "$PRJ_DIR" </dev/null; then
+				clone=(git clone)
+				# gh clones with its own login, so private repos work before `gh auth setup-git`
+				if $use_gh && _is_github "$REMOTE"; then
+						clone=(gh repo clone)
+				fi
+				# </dev/null: the loop's stdin is the list, and a child that reads it would skip repos
+				if ! "${clone[@]}" "$REMOTE" "$PRJ_DIR" </dev/null; then
 						echo "❌ Failed to clone $REMOTE into $PRJ_DIR" >&2
+						_clone_hint "$REMOTE" "$PRJ_DIR"
 						continue
 				fi
 		done < "$input_file"
