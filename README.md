@@ -32,6 +32,8 @@ repoman.sh repoman.lst
 cat repoman.lst | repoman.sh
 ```
 
+If the [GitHub CLI](https://cli.github.com/) is installed and logged in, Repoman clones GitHub repositories with `gh repo clone`, so private repositories clone on a new machine without extra git setup. Other remotes use `git clone`. To pull or push in those clones later without a password prompt, run `gh auth setup-git` once.
+
 Lines without a remote (the output of `-n`, and part of the output of `-a`) can't be cloned. Repoman reports them as invalid entries and carries on.
 
 ## Why use this

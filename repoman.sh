@@ -121,12 +121,17 @@ _export() {
 }
 
 _import() {
-		local input_file="${1:-/dev/stdin}" PRJ_DIR REMOTE line
+		local input_file="${1:-/dev/stdin}" PRJ_DIR REMOTE line clone
 
 		# Check if the input file exists and is readable
 		if [[ ! -r "$input_file" ]]; then
 				echo "❌ Input file not found or unreadable: $input_file" >&2
 				exit 1
+		fi
+
+		local use_gh=false
+		if command -v gh >/dev/null && gh auth token >/dev/null 2>&1; then
+				use_gh=true
 		fi
 
 		# Read the file line by line
@@ -147,7 +152,12 @@ _import() {
 				fi
 
 				echo; echo "⏳ Cloning $PRJ_DIR"
-				if ! git clone "$REMOTE" "$PRJ_DIR"; then
+				clone=(git clone)
+				# gh clones with its own login, so private repos work before `gh auth setup-git`
+				if $use_gh && [[ "$REMOTE" == *[@/]github.com[:/]* ]]; then
+						clone=(gh repo clone)
+				fi
+				if ! "${clone[@]}" "$REMOTE" "$PRJ_DIR"; then
 						echo "❌ Failed to clone $REMOTE into $PRJ_DIR" >&2
 						continue
 				fi
