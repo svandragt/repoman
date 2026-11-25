@@ -44,6 +44,11 @@ _is_excluded() {
 		return 1
 }
 
+# Matches the host only, so a github.com inside another host's path does not count
+_is_github() {
+		[[ "$1" =~ ^(https://([^/@]+@)?github\.com/|git@github\.com:|ssh://git@github\.com/) ]]
+}
+
 # git has already printed its own error, so this adds only the likely fix
 _clone_hint() {
 		local remote=$1 dir=$2 err
@@ -55,7 +60,10 @@ _clone_hint() {
 		err=$(GIT_TERMINAL_PROMPT=0 git ls-remote "$remote" HEAD 2>&1 >/dev/null)
 		case "$err" in
 				*"could not read Username"*|*"Authentication failed"*|*"Repository not found"*)
-						echo "   The repository is private or does not exist. Log in with 'gh auth login', or run 'gh auth setup-git' if gh is already logged in." >&2 ;;
+						echo "   The repository is private or does not exist, or your login to its host failed." >&2
+						if [[ "$remote" == https://* ]] && _is_github "$remote"; then
+								echo "   For a private GitHub repository, log in with 'gh auth login'." >&2
+						fi ;;
 				*"Permission denied (publickey)"*|*"Host key verification failed"*)
 						echo "   The host refused your SSH key. Add the key to your account, or change the remote to an https:// URL." >&2 ;;
 				*"Could not resolve host"*)
@@ -149,7 +157,7 @@ _import() {
 		fi
 
 		local use_gh=false
-		if command -v gh >/dev/null && gh auth token >/dev/null 2>&1; then
+		if command -v gh >/dev/null && gh auth status --hostname github.com >/dev/null 2>&1; then
 				use_gh=true
 		fi
 
@@ -173,7 +181,7 @@ _import() {
 				echo; echo "⏳ Cloning $PRJ_DIR"
 				clone=(git clone)
 				# gh clones with its own login, so private repos work before `gh auth setup-git`
-				if $use_gh && [[ "$REMOTE" == *[@/]github.com[:/]* ]]; then
+				if $use_gh && _is_github "$REMOTE"; then
 						clone=(gh repo clone)
 				fi
 				if ! "${clone[@]}" "$REMOTE" "$PRJ_DIR"; then
